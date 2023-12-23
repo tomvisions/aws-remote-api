@@ -5,7 +5,8 @@ import {
     GetPipelineCommandOutput,
     PipelineDeclaration,
     GetPipelineStateCommand,
-    GetPipelineStateCommandOutput, StageState
+    GetPipelineStateCommandOutput, StageState,
+    PutApprovalResultCommand
 } from "@aws-sdk/client-codepipeline";
 
 const REGION = 'us-east-1'
@@ -23,14 +24,18 @@ export const getAllPipelines = async () => {
  * Get pipeline
  * @param name
  */
-export const getPipeline = async (name:string) : Promise<PipelineDeclaration|any> => {
+export const getPipeline = async (name:string) : Promise<PipelineDeclaration | undefined> => {
     return (await getPipeLineCommand(name)).pipeline;
 }
-/*
-const putApprovalResult = async () => {
+
+export const putApprovalResult = async (params:any) => {
+    return putApprovalResultCommand(params)
+}
+
+const putApprovalResultCommand = async (params:any) => {
     try {
 
-        const putApprovalResult = new PutApprovalResult({});
+        const putApprovalResult = new PutApprovalResultCommand(params);
 
         return await client.send(putApprovalResult);
     } catch (error: any) {
@@ -38,7 +43,6 @@ const putApprovalResult = async () => {
         return error.toString();
     }
 }
-*/
 
 export const getPipelineState = async (name:string) : Promise<StageState[] | undefined> => {
     try {
@@ -49,8 +53,6 @@ export const getPipelineState = async (name:string) : Promise<StageState[] | und
         return error.toString();
     }
 }
-
-
 
 /**
  * Calling list pipelines from aws

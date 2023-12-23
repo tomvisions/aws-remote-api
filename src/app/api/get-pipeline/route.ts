@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import {getPipeline} from "@/shared/codepipeline";
+import {getPipeline} from "@/shared/codepipeline/aws-sdk";
 
 export async function GET(request: Request) {
  //  console.log('the requst')
