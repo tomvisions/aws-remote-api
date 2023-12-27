@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import {NextResponse} from 'next/server'
 import {getPipeline, getPipelineState, putApprovalResult,} from "@/shared/codepipeline/aws-sdk";
 import {
     ActionCategory,
@@ -33,114 +33,124 @@ export async function POST(request: Request) {
         return NextResponse.json(pipelineInfo);
     }
 
-    const filteredState = filterStates(states)[0];
+    const filteredState: StageState = filterStates(states)[0];
 
     console.log('filteredState')
     console.log(filteredState);
+    //console.log(filteredState[0].actionName);
+    if (!filteredState.actionStates?.length) {
+        return NextResponse.json(pipelineInfo);
+    }
 
-    //   filteredState[0].latestExecution.token;
-    /*
-        const params = {
-            actionName: action.name,
-            pipelineName: name,
-            result: {
-                status: 'Approved',
-                summary: 'approved by remote'
-            },
-            stageName: stage.name,
-         //   token: token
+    if (!filteredState.actionStates[0].latestExecution) {
+        return NextResponse.json(pipelineInfo);
+    }
 
-}
-*/
+    const token = filteredState.actionStates[0].latestExecution.token;
+
+    const params = {
+        actionName: action.name,
+        pipelineName: name,
+        result: {
+            status: 'Approved',
+            summary: 'approved by remote'
+        },
+        stageName: filteredState.stageName,
+        token: token
+    }
+    console.log(params);
+
+    await putApprovalResult(params);
 
     return NextResponse.json(filteredState);
 }
-    /*
+
+/*
 //    pipelineInfo.pipeline.
-    //console.log(pipelineInfo)
+//console.log(pipelineInfo)
 
-    const test = pipelineInfo.stages.filter(async (stage:StageDeclaration) => {
-        const actions :ActionDeclaration[] | undefined = stage.actions;
-        if (actions === undefined) {
-           return false;
+const test = pipelineInfo.stages.filter(async (stage:StageDeclaration) => {
+    const actions :ActionDeclaration[] | undefined = stage.actions;
+    if (actions === undefined) {
+       return false;
+    }
+    const actionNeeded : ActionDeclaration[] = (actions).filter((action : ActionDeclaration) => {
+
+        if (action.actionTypeId?.category === ActionCategory.Approval) {
+            return action;
         }
-        const actionNeeded : ActionDeclaration[] = (actions).filter((action : ActionDeclaration) => {
+    });
 
-            if (action.actionTypeId?.category === ActionCategory.Approval) {
+    if (!actionNeeded.length) {
+        return false;
+    }
+
+    console.log('action needed');
+    console.log(actionNeeded);
+    const states: StageState[] | undefined = await getPipelineState(name);
+
+    if (states === undefined) {
+        return false;
+    }
+   // console.log('the states')
+   // console.log(states);
+   let token;
+   const approvalState = states.filter((state) => {
+   //     console.log('the state');
+     //   console.log(state);
+        if (!state.actionStates?.length) {
+            return false;
+        }
+
+       const actionState = state.actionStates?.filter((action) => {
+      //      console.log('the action')
+        //    console.log(action);
+            if (action.latestExecution?.status === ActionExecutionStatus.InProgress) {
                 return action;
             }
+
+            return false;
         });
 
-        if (!actionNeeded.length) {
+        if (!actionState?.length) {
             return false;
         }
+        console.log('the action state');
+        console.log(actionState)
+       token = actionState[0].latestExecution?.token;
+       return actionState;
+    })
 
-        console.log('action needed');
-        console.log(actionNeeded);
-        const states: StageState[] | undefined = await getPipelineState(name);
+    console.log('the state');
+    console.log(approvalState);
 
-        if (states === undefined) {
-            return false;
-        }
-       // console.log('the states')
-       // console.log(states);
-       let token;
-       const approvalState = states.filter((state) => {
-       //     console.log('the state');
-         //   console.log(state);
-            if (!state.actionStates?.length) {
-                return false;
-            }
+//    const token =  approvalState[0].actionStates[0]
+    const params = {
+        actionName: actionNeeded[0]['name'],
+        pipelineName: name,
+        result: {
+            status: 'Approved',
+            summary: 'approved by remote'
+        },
+        stageName: stage.name,
+        token: token
 
-           const actionState = state.actionStates?.filter((action) => {
-          //      console.log('the action')
-            //    console.log(action);
-                if (action.latestExecution?.status === ActionExecutionStatus.InProgress) {
-                    return action;
-                }
+    }
 
-                return false;
-            });
+    console.log('params')
+    console.log(params);
+    const test = await putApprovalResult(params);
+    console.log('the result');
+    console.log(test);
 
-            if (!actionState?.length) {
-                return false;
-            }
-            console.log('the action state');
-            console.log(actionState)
-           token = actionState[0].latestExecution?.token;
-           return actionState;
-        })
-
-        console.log('the state');
-        console.log(approvalState);
-
-    //    const token =  approvalState[0].actionStates[0]
-        const params = {
-            actionName: actionNeeded[0]['name'],
-            pipelineName: name,
-            result: {
-                status: 'Approved',
-                summary: 'approved by remote'
-            },
-            stageName: stage.name,
-            token: token
-
-        }
-
-        console.log('params')
-        console.log(params);
-        const test = await putApprovalResult(params);
-        console.log('the result');
-        console.log(test);
-
-     //   process.exit(0);
-      //  console.log(getPipelineState(name));
+ //   process.exit(0);
+  //  console.log(getPipelineState(name));
 
 
 
 //        Array.from(actions ?? []).map((test) => {
-  //          console.log('tses')
-    //        console.log(test);
-      //  })
-    })
+//          console.log('tses')
+//        console.log(test);
+  //  })
+})
 */
